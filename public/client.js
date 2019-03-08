@@ -1,57 +1,77 @@
-var things = [];
-var users = {};
-var gamestate;
+let gamestate;
+let state = 'waiting';
 
 const socket = io();
 
-socket.on('connect', function() {
-	var id = socket.io.engine.id;
+socket.on("connect", function() {
+	let id = socket.io.engine.id;
 	console.log(id);
 });
 
 socket.on("gamestate",function(packet){
 	gamestate = packet;
-//	console.log(packet);
-});
-
-socket.on("response",function(info){
-	console.log(info);
 });
 
 function renderGame(state) {
-	if (!state) {
-		return;
-	} else {
-		fill(255,255,255,alpha);
-		ellipse(state.ball.pos.x,state.ball.pos.y,20,20);
-		rect(state.players[0].pos.x, state.players[0].pos.y, 20, 50);
-	}
+	noStroke();
+	fill(255,255,255,alpha);
+	ellipse(state.ball.pos.x,state.ball.pos.y,10,10);
+	drawPlayer(state.players[0]);
+	drawPlayer(state.players[1]);
 }
 
-function mysetup() {
-	if (!gamestate) {
-		setTimeout(mysetup, 1000);
-	} else {
-		createCanvas(gamestate.width,gamestate.height);
-		background(51);
-	}
-  //socket.emit("request",{"type":"start"});
+function drawPlayer(player) {
+	rectMode(RADIUS);
+	rect(player.pos.x, player.pos.y, player.width, player.height);
 }
+
 
 function setup() {
-	mysetup();
-
+	createCanvas(400,300);
+	background(51);
 }
 
 function draw() {
-    //Clear the canvas
     background(51);
-    //Remove outline of things
-    noStroke();
+	switch (state) {
+		case 'waiting':
+			textSize(32);
+			fill(255);
+			text(state, 30, 62);
+			if (gamestate) {
+				state = 'playing'
+			}
+			break;
+		case 'playing':
+			renderGame(gamestate);
+		default:
+			break;
+	}
+}
 
-	renderGame(gamestate);
+function keyPressed() {
+	console.log(keyCode);
+	switch (keyCode) {
+		case UP_ARROW:
+			socket.emit("key",{"dir":'up', 'type':'pressed'});
+			break;
+		case DOWN_ARROW:
+			socket.emit("key",{"dir":'down', 'type':'pressed'});
+			break;
+		default:
+			break;
+	}
+}
 
-  //We need to send the server our information so the other players can see it
-//  socket.emit("info",{"x":mouseX,"y":mouseY});
-
+function keyReleased() {
+	switch (keyCode) {
+		case UP_ARROW:
+			socket.emit("key",{"dir":'up', 'type':'released'});
+			break;
+		case DOWN_ARROW:
+			socket.emit("key",{"dir":'down', 'type':'released'});
+			break;
+		default:
+			break;
+	}
 }
