@@ -14,7 +14,7 @@ app.set('port', 5941);
 /* Giveuser access to files...
    If you were going to do this *not* on github you wouldn't want to allow them to see server.js (just saying)
 */
-app.use('/', express.static(__dirname + '/'));
+app.use('/', express.static(__dirname + '/public'));
 
 //What file to send users
 app.get('/', function(request, response) {
