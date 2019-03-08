@@ -31,6 +31,7 @@ class Player {
 		this.width = w;
 		this.height = h;
 		this.dir = null;
+		this.connected = false;
 	}
 }
 
@@ -128,13 +129,21 @@ class Game {
 		}
 	}
 
+	removeplayer(id) {
+		let player = this.players[this.idmap[id]];
+		if (player) {
+			player.connected = false;
+		}
+		this.idmap[id] = null;
+	}
+
 	move(id, data) {
-		let player = this.idmap[id];
-		console.log(player);
+		let player = this.players[this.idmap[id]];
+		if (!player) return;
 		if (data.type == 'pressed') {
-			this.players[player].dir = data.dir;
-		} else if (data.type == 'released' && data.dir == this.players[player].dir) {
-			this.players[player].dir = null;
+			player.dir = data.dir;
+		} else if (data.type == 'released' && data.dir == player.dir) {
+			player.dir = null;
 		}
 	}
 }
@@ -145,7 +154,6 @@ let gamestate = new Game();
 io.on("connection", (socket) => {
 	console.log(`Someone connected! Their id is: ${socket.id}`);
 
-	//TODO handle more than two connections
 	gamestate.addplayer(socket.id);
 
 	socket.on('request',(request) => {
@@ -159,7 +167,7 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("disconnect", () => {
-		//TODO do something
+		gamestate.removeplayer(socket.id);
 		console.log(`Someone disconnected... ${socket.id}`);
 	});
 });
