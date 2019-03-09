@@ -5,7 +5,6 @@ const socket = io();
 
 socket.on("connect", function() {
 	let id = socket.io.engine.id;
-	console.log(id);
 });
 
 socket.on("gamestate",function(packet){
@@ -50,7 +49,6 @@ function draw() {
 }
 
 function keyPressed() {
-	console.log(keyCode);
 	switch (keyCode) {
 		case UP_ARROW:
 			socket.emit("key",{"dir":'up', 'type':'pressed'});
