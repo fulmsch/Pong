@@ -40,6 +40,7 @@ class Player {
 		this.height = h;
 		this.dir = null;
 		this.connected = false;
+		this.score = 0;
 	}
 }
 
@@ -99,10 +100,12 @@ class Game {
 
 		// Edge collision
 		if (this.ball.pos.x <= -this.ball.radius) {
-			// Point for player 0
+			// Point for player 1
+			this.players[1].score += 1;
 			this.reset();
 		} else if (this.ball.pos.x >= this.width + this.ball.radius) {
-			// Point for player 1
+			// Point for player 0
+			this.players[0].score += 1;
 			this.reset();
 		} else if (this.ball.pos.y <= this.ball.radius || this.ball.pos.y >= this.height - this.ball.radius) {
 			this.ball.vel.y = -this.ball.vel.y;

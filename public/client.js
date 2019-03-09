@@ -17,6 +17,11 @@ function renderGame(state) {
 	ellipse(state.ball.pos.x,state.ball.pos.y,10,10);
 	drawPlayer(state.players[0]);
 	drawPlayer(state.players[1]);
+
+	// Scores
+	textSize(16);
+	text(state.players[0].score, state.width / 2 - 50, 30);
+	text(state.players[1].score, state.width / 2 + 50, 30);
 }
 
 function drawPlayer(player) {
