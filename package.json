@@ -19,6 +19,7 @@
   "homepage": "https://github.com/fulmsch/Pong#readme",
   "dependencies": {
     "express": "^4.16.4",
+    "p5": "^0.7.3",
     "socket.io": "^2.2.0"
   }
 }

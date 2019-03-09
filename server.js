@@ -12,6 +12,14 @@ var server = http.Server(app);
 var io = socketIO(server);
 app.set('port', 5941);
 
+var fs = require('fs');
+
+// destination will be created or overwritten by default.
+fs.copyFile(__dirname + '/node_modules/p5/lib/p5.js', __dirname + '/public/p5.js', (err) => {
+  if (err) throw err;
+  console.log('File was copied to destination');
+});
+
 // Let clients only access the 'public' directory
 app.use('/', express.static(__dirname + '/public'));
 
