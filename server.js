@@ -48,6 +48,12 @@ class Player {
 	}
 }
 
+class User{
+	constructor(id){
+		this.id = id;
+	}
+}
+
 class Ball {
 	constructor(x, y, r) {
 		this.pos = new Vect2d(x, y);
@@ -69,12 +75,14 @@ class Game {
 		this.width = 400;
 		this.height = 300;
 		this.players = [];
+		this.users = [];
 		this.players[0] = new Player(15, this.height / 2, 5, 25);
 		this.players[1] = new Player(this.width - 15, this.height / 2, 5, 25);
 		this.ball = new Ball(this.width / 2, this.height / 2, 5);
 		this.ball.vel.x = 3;
 		this.ball.vel.y = 3;
-		this.idmap = {} // Maps socket IDs to player numbers
+		this.idmap = {}; // Maps socket IDs to player numbers
+		this.state = 'idle';
 	}
 
 	reset() {
@@ -142,6 +150,8 @@ class Game {
 			this.idmap[id] = 1;
 			this.players[1].connected = true;
 		}
+
+		this.users.push(new User(id));
 	}
 
 	removeplayer(id) {
@@ -168,7 +178,6 @@ let gamestate = new Game();
 //create socket callbacks...
 io.on("connection", (socket) => {
 	console.log(`Someone connected! Their id is: ${socket.id}`);
-
 	gamestate.addplayer(socket.id);
 
 	socket.on('request',(request) => {

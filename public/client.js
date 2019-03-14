@@ -1,5 +1,6 @@
 let gamestate;
 let state = 'waiting';
+let homeScreenRendered = false;
 
 const socket = io();
 
@@ -24,6 +25,32 @@ function renderGame(state) {
 	text(state.players[1].score, state.width / 2 + 50, 30);
 }
 
+function renderHomeScreen() {
+    let input;
+	if(!homeScreenRendered){
+        input = createInput();
+        input.position(20, 65);
+
+        let button = createButton('submit');
+        button.position(input.x + input.width, 65);
+        button.mousePressed(startGame);
+
+        let inputLabel = createElement('h2', 'Enter your Name');
+        inputLabel.position(20, 5);
+
+        homeScreenRendered = true;
+    }
+
+    function startGame() {
+		console.log(input.value());
+        homeScreenRendered = false;
+		//TODO: Send name to Server and start searching for a Lobby
+    }
+
+}
+
+function renderLobby(){}
+
 function drawPlayer(player) {
 	rectMode(RADIUS);
 	rect(player.pos.x, player.pos.y, player.width, player.height);
@@ -43,11 +70,17 @@ function draw() {
 			fill(255);
 			text(state, 30, 62);
 			if (gamestate) {
-				state = 'playing'
+				state = 'connected'
 			}
 			break;
-		case 'playing':
-			renderGame(gamestate);
+		case 'connected':
+			switch(gamestate.state){
+				case 'playing' : renderGame(gamestate);
+				break;
+				case 'searching': renderLobby();
+				break;
+                case 'idle': renderHomeScreen();
+			}
 		default:
 			break;
 	}
