@@ -19,6 +19,10 @@ fs.copyFile(__dirname + '/node_modules/p5/lib/p5.js', __dirname + '/public/p5.js
   if (err) throw err;
   console.log('File was copied to destination');
 });
+fs.copyFile(__dirname + '/node_modules/p5/lib/addons/p5.dom.js', __dirname + '/public/p5.dom.js', (err) => {
+  if (err) throw err;
+  console.log('File was copied to destination');
+});
 
 // Let clients only access the 'public' directory
 app.use('/', express.static(__dirname + '/public'));
