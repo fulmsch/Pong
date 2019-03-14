@@ -6,6 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 p5.js
 
+# Intellij
+*.idea
+*.iml
+
 # Runtime data
 pids
 *.pid
