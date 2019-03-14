@@ -13,6 +13,7 @@ socket.on("gamestate",function(packet){
 });
 
 function renderGame(state) {
+	removeElements();
 	noStroke();
 	fill(255,255,255,alpha);
 	ellipse(state.ball.pos.x,state.ball.pos.y,10,10);
@@ -27,7 +28,8 @@ function renderGame(state) {
 
 function renderHomeScreen() {
     let input;
-	if(!homeScreenRendered){
+	if (!homeScreenRendered) {
+		removeElements();
         input = createInput();
         input.position(20, 65);
 
@@ -45,11 +47,16 @@ function renderHomeScreen() {
 		console.log(input.value());
         homeScreenRendered = false;
 		//TODO: Send name to Server and start searching for a Lobby
+		socket.emit("enterLobby",{"name":input.value()});
     }
 
 }
 
-function renderLobby(){}
+function renderLobby() {
+	removeElements();
+	let message = createElement('h2', 'Searching...');
+	message.position(20, 5);
+}
 
 function drawPlayer(player) {
 	rectMode(RADIUS);

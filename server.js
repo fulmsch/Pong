@@ -190,6 +190,12 @@ io.on("connection", (socket) => {
 		console.log(`Player: ${socket.id}, Direction: ${data.dir}`);
 	});
 
+	socket.on("enterLobby", (request) => {
+		console.log(`Player ${request.name} is looking for a game...`);
+		//TODO: This should be per user
+		gamestate.state = 'searching';
+	});
+
 	socket.on("disconnect", () => {
 		gamestate.removeplayer(socket.id);
 		console.log(`Someone disconnected... ${socket.id}`);
