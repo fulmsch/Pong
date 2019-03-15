@@ -56,6 +56,32 @@ class Ball {
 		this.pos = new Victor(x, y);
 		this.vel = new Victor(0, 0);
 		this.radius = r;
+		this.maxAngle = 30;
+	}
+
+	collide(player) {
+		if (this.pos.x - this.radius <= player.pos.x + player.width &&
+		        this.pos.x + this.radius >= player.pos.x - player.width &&
+		        this.pos.y - this.radius <= player.pos.y + player.height &&
+		        this.pos.y + this.radius >= player.pos.y - player.height
+		) {
+			let dir = this.pos.clone().subtract(player.pos);
+			let vel = this.vel.length();
+			dir.norm().multiply(new Victor(vel, vel));
+			this.vel = dir;
+
+			// Limit the angle of the ball
+			let angle = this.vel.angleDeg();
+			if (angle > (90 - this.maxAngle) && angle <= 90) {
+				this.vel.rotateToDeg(90 - this.maxAngle);
+			} else if (angle >= 90 && angle < (90 + this.maxAngle)) {
+				this.vel.rotateToDeg(90 + this.maxAngle);
+			} else if (angle < (-90 + this.maxAngle) && angle >= -90) {
+				this.vel.rotateToDeg(-90 + this.maxAngle);
+			} else if (angle < -90 && angle > (-90 - this.maxAngle)) {
+				this.vel.rotateToDeg(-90 - this.maxAngle);
+			}
+		}
 	}
 }
 
@@ -68,9 +94,9 @@ class Game {
 		this.players[0] = new Player(15, this.height / 2, 5, 25);
 		this.players[1] = new Player(this.width - 15, this.height / 2, 5, 25);
 		this.ball = new Ball(this.width / 2, this.height / 2, 5);
-		this.ball.vel.x = 3;
-		this.ball.vel.y = 3;
 		this.idmap = {}; // Maps socket IDs to player numbers
+		this.startDir = 1;
+		this.reset();
 
 		for (let i = 0; i < 2; i++) {
 			this.players[i].name = users[i].name;
@@ -100,10 +126,14 @@ class Game {
 	}
 
 	reset() {
-		this.ball.vel.x = 3;
-		this.ball.vel.y = 3;
+		this.ball.vel.x = 5 * this.startDir;
+		this.ball.vel.y = 0;
 		this.ball.pos.x = this.width / 2;
 		this.ball.pos.y = this.height / 2;
+		this.players[0].pos.y = this.height / 2;
+		this.players[1].pos.y = this.height / 2;
+
+		this.startDir = -this.startDir;
 	}
 
 	addplayer(id) {
@@ -134,6 +164,10 @@ class Game {
 			}
 		}
 
+		// Paddle collision
+		this.ball.collide(this.players[0]);
+		this.ball.collide(this.players[1]);
+
 		// Edge collision
 		if (this.ball.pos.x <= -this.ball.radius) {
 			// Point for player 1
@@ -143,22 +177,12 @@ class Game {
 			// Point for player 0
 			this.players[0].score += 1;
 			this.reset();
-		} else if (this.ball.pos.y <= this.ball.radius || this.ball.pos.y >= this.height - this.ball.radius) {
+		} else if (this.ball.pos.y <= this.ball.radius) {
 			this.ball.vel.y = -this.ball.vel.y;
-		}
-
-		// Paddle collision
-		//TODO improve this
-		if (this.ball.pos.x - this.ball.radius <= this.players[0].pos.x + this.players[0].width &&
-		    this.ball.pos.y - this.ball.radius <= this.players[0].pos.y + this.players[0].height &&
-		    this.ball.pos.y + this.ball.radius >= this.players[0].pos.y - this.players[0].height &&
-		    this.ball.vel.x < 0) {
-			this.ball.vel.x = -this.ball.vel.x;
-		} else if (this.ball.pos.x + this.ball.radius >= this.players[1].pos.x - this.players[1].width &&
-		    this.ball.pos.y - this.ball.radius <= this.players[1].pos.y + this.players[1].height &&
-		    this.ball.pos.y + this.ball.radius >= this.players[1].pos.y - this.players[1].height &&
-		    this.ball.vel.x > 0) {
-			this.ball.vel.x = -this.ball.vel.x;
+			this.ball.pos.y = this.ball.radius;
+		} else if (this.ball.pos.y >= this.height - this.ball.radius) {
+			this.ball.vel.y = -this.ball.vel.y;
+			this.ball.pos.y = this.height - this.ball.radius;
 		}
 	}
 
