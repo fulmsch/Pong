@@ -45,6 +45,7 @@ class Player {
 		this.dir = null;
 		this.score = 0;
 		this.connected = false;
+		this.name = '';
 	}
 }
 
@@ -75,6 +76,10 @@ class Game {
 		this.ball.vel.x = 3;
 		this.ball.vel.y = 3;
 		this.idmap = {}; // Maps socket IDs to player numbers
+
+		for (let i = 0; i < 2; i++) {
+			this.players[i].name = users[i].name;
+		}
 
 		this.namespace = io.of('/' + name);
 		this.namespace.on('connection', (socket) => {
@@ -190,16 +195,16 @@ io.on("connection", (socket) => {
 	socket.on("enterLobby", (request) => {
 		console.log(`Player ${request.name} is looking for a game...`);
 
-		queue.push(socket.id);
+		queue.push({'id':socket.id,'name':request.name});
 		if (queue.length >= 2) {
 			let users = queue.splice(0, 2);
-			let name = users[0] + users[1];
+			let name = users[0].id + users[1].id;
 //			console.log(socket.id);
 //			console.log(users);
 			let game = new Game(name, users);
 			socket.emit('joinLobby', {'namespace':name});
 			for (const user of users) {
-				socket.to(user).emit('joinLobby', {'namespace':name});
+				socket.to(user.id).emit('joinLobby', {'namespace':name});
 			}
 		}
 	});

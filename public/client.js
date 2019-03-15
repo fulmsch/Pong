@@ -32,8 +32,10 @@ function renderGame(state) {
 
 	// Scores
 	textSize(16);
-	text(state.players[0].score, width / 2 - 50, 30);
-	text(state.players[1].score, width / 2 + 50, 30);
+	textAlign(LEFT);
+	text(state.players[0].name + ': ' + state.players[0].score, 20, 30);
+	textAlign(RIGHT);
+	text(state.players[1].name + ': ' + state.players[1].score, width - 20, 30);
 }
 
 function renderHomeScreen() {
