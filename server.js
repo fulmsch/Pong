@@ -12,6 +12,8 @@ var server = http.Server(app);
 var io = socketIO(server);
 app.set('port', 5941);
 
+var Victor = require('victor');
+
 var fs = require('fs');
 
 // destination will be created or overwritten by default.
@@ -39,7 +41,7 @@ server.listen(80, function() {
 
 class Player {
 	constructor(x, y, w, h) {
-		this.pos = new Vect2d(x, y);
+		this.pos = new Victor(x, y);
 		this.width = w;
 		this.height = h;
 		this.dir = null;
@@ -51,16 +53,9 @@ class Player {
 
 class Ball {
 	constructor(x, y, r) {
-		this.pos = new Vect2d(x, y);
-		this.vel = new Vect2d(0, 0);
+		this.pos = new Victor(x, y);
+		this.vel = new Victor(0, 0);
 		this.radius = r;
-	}
-}
-
-class Vect2d {
-	constructor(x, y) {
-		this.x = x || 0;
-		this.y = y || 0;
 	}
 }
 
