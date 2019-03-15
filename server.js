@@ -43,14 +43,8 @@ class Player {
 		this.width = w;
 		this.height = h;
 		this.dir = null;
-		this.connected = false;
 		this.score = 0;
-	}
-}
-
-class User{
-	constructor(id){
-		this.id = id;
+		this.connected = false;
 	}
 }
 
@@ -70,19 +64,39 @@ class Vect2d {
 }
 
 class Game {
-	constructor() {
+	constructor(name, users) {
 		this.ticklen = 1000/60;
 		this.width = 400;
 		this.height = 300;
 		this.players = [];
-		this.users = [];
 		this.players[0] = new Player(15, this.height / 2, 5, 25);
 		this.players[1] = new Player(this.width - 15, this.height / 2, 5, 25);
 		this.ball = new Ball(this.width / 2, this.height / 2, 5);
 		this.ball.vel.x = 3;
 		this.ball.vel.y = 3;
 		this.idmap = {}; // Maps socket IDs to player numbers
-		this.state = 'idle';
+
+		this.namespace = io.of('/' + name);
+		this.namespace.on('connection', (socket) => {
+			console.log(`Someone connected to the namespace! Their id is: ${socket.id}`);
+			this.addplayer(socket.id);
+
+			socket.on("disconnect", (msg) => {
+				console.log(msg);
+	//			this.removeplayer(socket.id);
+	//			console.log(`Someone disconnected... ${socket.id}`);
+			});
+
+			socket.on('key', (data) => {
+				this.move(socket.id, data);
+				console.log(`Player: ${socket.id}, Direction: ${data.dir}`);
+			});
+		});
+
+		setInterval(() => {
+			this.update()
+			this.send()
+		}, this.ticklen);
 	}
 
 	reset() {
@@ -90,6 +104,16 @@ class Game {
 		this.ball.vel.y = 3;
 		this.ball.pos.x = this.width / 2;
 		this.ball.pos.y = this.height / 2;
+	}
+
+	addplayer(id) {
+		if (!this.players[0].connected) {
+			this.idmap[id] = 0;
+			this.players[0].connected = true;
+		} else if (!this.players[1].connected) {
+			this.idmap[id] = 1;
+			this.players[1].connected = true;
+		}
 	}
 
 	update() {
@@ -139,29 +163,13 @@ class Game {
 	}
 
 	send() {
-		io.sockets.emit("gamestate",this);
+		let gamestate = {
+			'ball':this.ball,
+			'players':this.players
+		}
+		this.namespace.emit("gamestate", gamestate);
 	}
 	
-	addplayer(id) {
-		if (!this.players[0].connected) {
-			this.idmap[id] = 0;
-			this.players[0].connected = true;
-		} else if (!this.players[1].connected) {
-			this.idmap[id] = 1;
-			this.players[1].connected = true;
-		}
-
-		this.users.push(new User(id));
-	}
-
-	removeplayer(id) {
-		let player = this.players[this.idmap[id]];
-		if (player) {
-			player.connected = false;
-		}
-		this.idmap[id] = null;
-	}
-
 	move(id, data) {
 		let player = this.players[this.idmap[id]];
 		if (!player) return;
@@ -173,36 +181,27 @@ class Game {
 	}
 }
 
-let gamestate = new Game();
+let queue = [];
 
 //create socket callbacks...
 io.on("connection", (socket) => {
 	console.log(`Someone connected! Their id is: ${socket.id}`);
-	gamestate.addplayer(socket.id);
-
-	socket.on('request',(request) => {
-		io.sockets.emit("response",{"type":"denied"});
-		console.log(`Someone connected! Their id is: ${request.type}`);
-	});
-
-	socket.on('key', (data) => {
-		gamestate.move(socket.id, data);
-		console.log(`Player: ${socket.id}, Direction: ${data.dir}`);
-	});
 
 	socket.on("enterLobby", (request) => {
 		console.log(`Player ${request.name} is looking for a game...`);
-		//TODO: This should be per user
-		gamestate.state = 'searching';
+
+		queue.push(socket.id);
+		if (queue.length >= 2) {
+			let users = queue.splice(0, 2);
+			let name = users[0] + users[1];
+//			console.log(socket.id);
+//			console.log(users);
+			let game = new Game(name, users);
+			socket.emit('joinLobby', {'namespace':name});
+			for (const user of users) {
+				socket.to(user).emit('joinLobby', {'namespace':name});
+			}
+		}
 	});
 
-	socket.on("disconnect", () => {
-		gamestate.removeplayer(socket.id);
-		console.log(`Someone disconnected... ${socket.id}`);
-	});
 });
-
-setInterval(() => {
-	gamestate.update()
-	gamestate.send()
-}, gamestate.ticklen);

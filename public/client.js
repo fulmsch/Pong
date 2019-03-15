@@ -1,29 +1,39 @@
 let gamestate;
-let state = 'waiting';
+let state = 'idle';
 let homeScreenRendered = false;
 
 const socket = io();
+let lobbySocket;
+
 
 socket.on("connect", function() {
 	let id = socket.io.engine.id;
 });
 
-socket.on("gamestate",function(packet){
-	gamestate = packet;
+socket.on("joinLobby", function(msg) {
+	console.log(msg);
+
+	lobbySocket = io('/' + msg.namespace);
+	lobbySocket.on('connect', () => {
+		lobbySocket.on("gamestate",function(packet){
+			state = 'playing';
+			gamestate = packet;
+		});
+	});
 });
 
 function renderGame(state) {
 	removeElements();
 	noStroke();
-	fill(255,255,255,alpha);
+	fill(255);
 	ellipse(state.ball.pos.x,state.ball.pos.y,10,10);
 	drawPlayer(state.players[0]);
 	drawPlayer(state.players[1]);
 
 	// Scores
 	textSize(16);
-	text(state.players[0].score, state.width / 2 - 50, 30);
-	text(state.players[1].score, state.width / 2 + 50, 30);
+	text(state.players[0].score, width / 2 - 50, 30);
+	text(state.players[1].score, width / 2 + 50, 30);
 }
 
 function renderHomeScreen() {
@@ -46,8 +56,9 @@ function renderHomeScreen() {
     function startGame() {
 		console.log(input.value());
         homeScreenRendered = false;
-		//TODO: Send name to Server and start searching for a Lobby
+
 		socket.emit("enterLobby",{"name":input.value()});
+		state = 'searching';
     }
 
 }
@@ -71,35 +82,22 @@ function setup() {
 
 function draw() {
     background(51);
-	switch (state) {
-		case 'waiting':
-			textSize(32);
-			fill(255);
-			text(state, 30, 62);
-			if (gamestate) {
-				state = 'connected'
-			}
-			break;
-		case 'connected':
-			switch(gamestate.state){
-				case 'playing' : renderGame(gamestate);
-				break;
-				case 'searching': renderLobby();
-				break;
-                case 'idle': renderHomeScreen();
-			}
-		default:
-			break;
+	switch(state){
+		case 'playing': renderGame(gamestate);
+		break;
+		case 'searching': renderLobby();
+		break;
+		case 'idle': renderHomeScreen();
 	}
 }
 
 function keyPressed() {
 	switch (keyCode) {
 		case UP_ARROW:
-			socket.emit("key",{"dir":'up', 'type':'pressed'});
+			lobbySocket.emit("key",{"dir":'up', 'type':'pressed'});
 			break;
 		case DOWN_ARROW:
-			socket.emit("key",{"dir":'down', 'type':'pressed'});
+			lobbySocket.emit("key",{"dir":'down', 'type':'pressed'});
 			break;
 		default:
 			break;
@@ -109,10 +107,10 @@ function keyPressed() {
 function keyReleased() {
 	switch (keyCode) {
 		case UP_ARROW:
-			socket.emit("key",{"dir":'up', 'type':'released'});
+			lobbySocket.emit("key",{"dir":'up', 'type':'released'});
 			break;
 		case DOWN_ARROW:
-			socket.emit("key",{"dir":'down', 'type':'released'});
+			lobbySocket.emit("key",{"dir":'down', 'type':'released'});
 			break;
 		default:
 			break;
