@@ -47,7 +47,7 @@ class Ball {
 }
 
 class Game {
-	constructor(name, users, io) {
+	constructor(users) {
 		this.ticklen = 1000/60;
 		this.width = 400;
 		this.height = 300;
@@ -63,27 +63,6 @@ class Game {
 			this.players[i].name = users[i].name;
 		}
 
-		this.namespace = io.of('/' + name);
-		this.namespace.on('connection', (socket) => {
-			console.log(`Someone connected to the namespace! Their id is: ${socket.id}`);
-			this.addplayer(socket.id);
-
-			socket.on("disconnect", (msg) => {
-				console.log(msg);
-	//			this.removeplayer(socket.id);
-	//			console.log(`Someone disconnected... ${socket.id}`);
-			});
-
-			socket.on('key', (data) => {
-				this.move(socket.id, data);
-				console.log(`Player: ${socket.id}, Direction: ${data.dir}`);
-			});
-		});
-
-		setInterval(() => {
-			this.update()
-			this.send()
-		}, this.ticklen);
 	}
 
 	reset() {

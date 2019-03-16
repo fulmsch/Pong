@@ -2,7 +2,7 @@
 Based on a project by Sam DeLong
 */
 
-const Game = require('./game.js');
+const Lobby = require('./lobby.js');
 
 //Yahdeyaa setup socket.io and express for web server
 var express = require('express');
@@ -54,7 +54,7 @@ io.on("connection", (socket) => {
 			let name = users[0].id + users[1].id;
 //			console.log(socket.id);
 //			console.log(users);
-			let game = new Game(name, users, io);
+			let game = new Lobby(name, users, io);
 			socket.emit('joinLobby', {'namespace':name});
 			for (const user of users) {
 				socket.to(user.id).emit('joinLobby', {'namespace':name});
