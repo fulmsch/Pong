@@ -52,6 +52,8 @@ function renderHomeScreen() {
         let inputLabel = createElement('h2', 'Enter your Name');
         inputLabel.position(20, 5);
 
+        let test = createElement('h2', 'Hello world');
+
         homeScreenRendered = true;
     }
 
