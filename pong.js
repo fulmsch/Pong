@@ -15,16 +15,22 @@ var io = socketIO(server);
 app.set('port', 5941);
 
 var fs = require('fs');
+var mkdirp = require('mkdirp');
 
-// destination will be created or overwritten by default.
-fs.copyFile(__dirname + '/node_modules/p5/lib/p5.js', __dirname + '/public/p5.js', (err) => {
-  if (err) throw err;
-  console.log('File was copied to destination');
-});
-fs.copyFile(__dirname + '/node_modules/p5/lib/addons/p5.dom.js', __dirname + '/public/p5.dom.js', (err) => {
-  if (err) throw err;
-  console.log('File was copied to destination');
-});
+// Copy library files
+mkdirp.sync(__dirname + '/public/lib');
+for (const libFile of [
+     '/node_modules/p5/lib/p5.js',
+     '/node_modules/p5/lib/addons/p5.dom.js',
+]) {
+	let destFile = '/public/lib/' + libFile.split('/').reverse()[0];
+
+	// destination will be created or overwritten by default.
+	fs.copyFile(__dirname + libFile, __dirname + destFile, (err) => {
+		if (err) throw err;
+		console.log(`"${libFile}" was copied to "${destFile}"`);
+	});
+}
 
 // Let clients only access the 'public' directory
 app.use('/', express.static(__dirname + '/public'));
